@@ -1,0 +1,2 @@
+# MagicalLocation
+android location client
