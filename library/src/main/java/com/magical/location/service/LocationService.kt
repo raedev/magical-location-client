@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.IBinder
 import com.magical.location.LocationOptions
 import com.magical.location.internal.Log
-import com.magical.location.internal.MagicalLocationRequest
+import com.magical.location.internal.AndroidLocationRequest
 
 /**
  * 位置服务
@@ -26,7 +26,7 @@ class LocationService : Service() {
     override fun onCreate() {
         super.onCreate()
         LocationServiceCompat.compatService(this)
-        _binder.request = MagicalLocationRequest(this)
+        _binder.request = AndroidLocationRequest(this)
         _binder.request.start()
         Log.debug("位置服务已启动")
     }

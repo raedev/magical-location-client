@@ -7,5 +7,5 @@
     <string name="gm_location_channel_name">位置信息通知</string>
     <string name="gm_location_channel_description">用于通知位置信息和轨迹记录</string>
     <string name="gm_location_notification_title">位置通知</string>
-    <string name="gm_location_notification_desc">当前应用正在后台使用位置信息</string>
+    <string name="gm_location_notification_desc">正在后台使用位置信息</string>
 </resources>

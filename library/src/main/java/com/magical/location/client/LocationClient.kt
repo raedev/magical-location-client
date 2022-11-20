@@ -58,11 +58,12 @@ class LocationClient(private val context: Context) : android.location.LocationLi
         }
     }
 
-    init {
-        if (context is LifecycleOwner) {
-            // 注册生命周期
-            context.lifecycle.addObserver(this)
-        }
+    /**
+     * 绑定生命周期
+     */
+    fun bindLifecycleOwner(owner: LifecycleOwner) {
+        owner.lifecycle.removeObserver(this)
+        owner.lifecycle.addObserver(this)
     }
 
     private fun notifyLocationChanged(location: Location) {
@@ -89,7 +90,7 @@ class LocationClient(private val context: Context) : android.location.LocationLi
     }
 
     /**
-     * 停止服务
+     * 停止服务，只是停止位置回调，后台的位置服务还在继续运行，若想彻底结束请调用[destroy]方法
      */
     fun stop() {
         if (_binder != null) {
@@ -100,6 +101,17 @@ class LocationClient(private val context: Context) : android.location.LocationLi
         }
     }
 
+    fun destroy() {
+        stop()
+        LocationServiceCompat.stopService(context)
+    }
+
+    /**
+     * 暂停定位
+     */
+    fun pause() {
+        this._paused = true
+    }
 
     /**
      * 更新配置

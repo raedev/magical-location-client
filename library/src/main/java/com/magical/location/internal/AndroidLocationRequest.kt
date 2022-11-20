@@ -1,3 +1,5 @@
+@file:Suppress("DeprecatedCallableAddReplaceWith")
+
 package com.magical.location.internal
 
 import android.annotation.SuppressLint
@@ -6,6 +8,8 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
+import android.os.Bundle
+import android.os.Looper
 import com.magical.location.LocationPermission
 import com.magical.location.MagicalLocationManager
 import com.magical.location.R
@@ -17,12 +21,12 @@ import com.magical.location.R
  * @copyright Copyright (c) https://github.com/raedev All rights reserved.
  */
 @SuppressLint("MissingPermission")
-class MagicalLocationRequest internal constructor(context: Context) : BaseLocationRequest(context),
+class AndroidLocationRequest internal constructor(context: Context) : BaseLocationRequest(context),
     LocationListener {
 
     /** 系统定位管理器 */
-    private val locationManager: android.location.LocationManager =
-        context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
+    private val locationManager: LocationManager =
+        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
     /** 是否已经注册监听 */
     private var isRegister: Boolean = false
@@ -37,7 +41,6 @@ class MagicalLocationRequest internal constructor(context: Context) : BaseLocati
         if (options.enableGPS && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             // 启用GPS
             providers.add(LocationManager.GPS_PROVIDER)
-            providers.add(LocationManager.PASSIVE_PROVIDER)
         }
         if (options.enableNetwork && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             // 启用网络位置
@@ -49,7 +52,8 @@ class MagicalLocationRequest internal constructor(context: Context) : BaseLocati
                 provider,
                 options.refreshTimeInterval,
                 options.minDistance.toFloat(),
-                this
+                this,
+                Looper.getMainLooper()
             )
         }
         // 回调位置信息
@@ -66,13 +70,28 @@ class MagicalLocationRequest internal constructor(context: Context) : BaseLocati
     }
 
     override fun onProviderEnabled(provider: String) {
-        super.onProviderEnabled(provider)
         Log.info("the $provider provider is enable")
+        restart()
     }
 
     override fun onProviderDisabled(provider: String) {
-        super.onProviderDisabled(provider)
         Log.warn("the $provider provider is disable")
+    }
+
+    override fun onLocationChanged(locations: MutableList<Location>) {
+        super.onLocationChanged(locations)
+    }
+
+    override fun onFlushComplete(requestCode: Int) {
+        Log.debug("location onFlushComplete $requestCode")
+    }
+
+    /**
+     * 必须重写这个方法，在部分手机上会报找不到实现类
+     */
+    @Deprecated("Deprecated in Java")
+    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+        Log.debug("location onStatusChanged $provider")
     }
 
     private fun unregister() {

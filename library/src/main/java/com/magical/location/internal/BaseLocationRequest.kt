@@ -8,6 +8,7 @@ import com.magical.location.LocationOptions
 import com.magical.location.MagicalLocationManager
 import com.magical.location.R
 import com.magical.location.service.TraceRecorder
+import java.util.*
 
 /**
  * 位置请求
@@ -27,6 +28,9 @@ abstract class BaseLocationRequest(protected val context: Context) {
 
     /** 注册监听 */
     private val _listeners: MutableList<LocationListener> = mutableListOf()
+
+    /** 队列 */
+    private val _queue: Queue<Location> = LinkedList()
 
     /**
      * 注册位置回调
@@ -53,6 +57,14 @@ abstract class BaseLocationRequest(protected val context: Context) {
     abstract fun stop()
 
     /**
+     * 重启位置监听
+     */
+    fun restart() {
+        this.stop()
+        this.start()
+    }
+
+    /**
      * 位置发生改变通知
      */
     protected fun notifyLocationChanged(location: Location) {
@@ -62,9 +74,15 @@ abstract class BaseLocationRequest(protected val context: Context) {
         if (lastLocation != null && location.distanceTo(lastLocation) <= 0) {
             return Log.debug("this location distance is less than 0 meters")
         }
+        // 若当前位置和上一次位置时间间隔小于1秒，并且精度较大则舍弃
+        if (lastLocation != null && location.time - lastLocation.time < 1000 && location.accuracy < lastLocation.accuracy) {
+            Log.warn("this location time is less than 1000ms on last location ")
+            return
+        }
+
         // 更新当前位置
         MagicalLocationManager.location = location
-        Log.debug("位置发生改变: $location")
+        Log.debug("location has changed: $location")
         // 发送位置广播
         val intent = Intent(MagicalLocationManager.ACTION_LOCATION_CHANGED)
         intent.putExtra(MagicalLocationManager.EXTRA_LOCATION, location)

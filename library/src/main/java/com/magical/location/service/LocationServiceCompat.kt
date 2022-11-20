@@ -63,6 +63,7 @@ object LocationServiceCompat {
      */
     internal fun compatService(service: Service) {
         val iconId = service.applicationInfo.icon
+        val appLabel = service.getString(service.applicationInfo.labelRes)
         val manager = service.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // 适配通知渠道
@@ -85,7 +86,7 @@ object LocationServiceCompat {
             }
             val intent = PendingIntent.getActivity(service, 1024, appIntent, flags)
             setContentTitle(service.getString(R.string.gm_location_notification_title))
-            setContentText(service.getString(R.string.gm_location_notification_desc))
+            setContentText(appLabel + service.getString(R.string.gm_location_notification_desc))
             setContentIntent(intent)
             setWhen(System.currentTimeMillis())
             setSmallIcon(iconId)

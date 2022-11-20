@@ -36,3 +36,13 @@ dependencies {
     implementation("androidx.room:room-runtime:$room")
     kapt("androidx.room:room-compiler:$room")
 }
+
+// 发布到Maven库
+apply from: rootProject.file('upload.gradle')
+ext {
+    ARTIFACT_GROUP = 'com.github.raedev'
+    ARTIFACT_ID = 'location'
+    ARTIFACT_VERSION = '1.0.0'
+    ARTIFACT_DESC = 'Android Location Client'
+    ARTIFACT_URL = 'https://github.com/raedev/magical-location-client'
+}

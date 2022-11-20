@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         _binding.btnStop.setOnClickListener {
-            _client.stop()
+            _client.destroy()
         }
 
         val location = MagicalLocationManager.getLastLocation(this)

@@ -52,6 +52,6 @@ interface LocationDao {
      * 查询轨迹
      */
     @Query("SELECT * FROM TRACES WHERE created_at BETWEEN :startDate AND :endDate")
-    fun findTraces(startDate: String, endDate: String): List<LocationPoint>
+    fun findTraces(startDate: String, endDate: String): List<LocationTrace>
 
 }
