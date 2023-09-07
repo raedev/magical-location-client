@@ -1,17 +1,23 @@
 package com.magical.location.client
 
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.location.Location
+import android.location.LocationManager
 import android.os.IBinder
+import androidx.core.location.LocationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.magical.location.LocationOptions
 import com.magical.location.LocationPermission
 import com.magical.location.MagicalLocationManager
+import com.magical.location.R
 import com.magical.location.internal.LocationDao
 import com.magical.location.internal.LocationDatabase
 import com.magical.location.internal.Log
@@ -25,7 +31,7 @@ import com.magical.location.service.LocationServiceCompat
  * @date 2022/10/28
  * @copyright Copyright (c) https://github.com/raedev All rights reserved.
  */
-class LocationClient(private val context: Context) : android.location.LocationListener,
+class LocationClient(private val context: Context) : LocationListener,
     LifecycleEventObserver {
 
     /** 配置项 */
@@ -58,6 +64,33 @@ class LocationClient(private val context: Context) : android.location.LocationLi
         }
     }
 
+    private var gpsStateReceiver: GpsStateReceiver? = null
+
+    private inner class GpsStateReceiver : BroadcastReceiver() {
+        private var lastState: Boolean? = null
+        override fun onReceive(context: Context, intent: Intent?) {
+            if (intent?.action != LocationManager.PROVIDERS_CHANGED_ACTION) return
+            val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val enable = LocationManagerCompat.isLocationEnabled(manager)
+            // 状态一致
+            if (lastState == enable) return
+            lastState = enable
+            listener?.onProviderStatusChanged("gps", enable, enable)
+            // 重新启动服务
+            if (enable) start() else stop()
+        }
+    }
+
+    /**
+     * 位置服务是否运行中
+     */
+    val isRunning: Boolean
+        get() {
+            val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            return _binder != null && LocationManagerCompat.isLocationEnabled(manager) && hasPermission()
+        }
+
+
     /**
      * 绑定生命周期
      */
@@ -70,14 +103,42 @@ class LocationClient(private val context: Context) : android.location.LocationLi
         if (!_paused) listener?.onLocationChanged(location)
     }
 
+    private fun registerStateReceiver() {
+        if (gpsStateReceiver == null) {
+            // 注册广播
+            gpsStateReceiver = GpsStateReceiver()
+            context.registerReceiver(
+                gpsStateReceiver,
+                IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION)
+            )
+        }
+    }
+
+    private fun unregisterStateReceiver() {
+        if (gpsStateReceiver != null) {
+            context.unregisterReceiver(gpsStateReceiver)
+            gpsStateReceiver = null
+        }
+    }
+
     /**
      * 启动服务
      */
     fun start() {
+        registerStateReceiver()
         if (!LocationPermission.isPermissionGranted(context)) {
             listener?.onLocationPermissionDenied()
             return
         }
+
+        // 检查GPS是否开启
+        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (!LocationManagerCompat.isLocationEnabled(manager)) {
+            listener?.onLocationError(context.getString(R.string.gm_location_disable))
+            // 线程监听GPS打开状态
+            return
+        }
+
         _paused = false
         _binder?.let { binder ->
             Log.warn("位置服务已经绑定")
@@ -101,8 +162,10 @@ class LocationClient(private val context: Context) : android.location.LocationLi
         }
     }
 
+
     fun destroy() {
         stop()
+        unregisterStateReceiver()
         LocationServiceCompat.stopService(context)
     }
 
@@ -132,6 +195,20 @@ class LocationClient(private val context: Context) : android.location.LocationLi
         LocationPermission.requestPermission(context as Activity)
     }
 
+    override fun onGnssStatusChanged(count: Int, signal: Int, label: String) {
+        if (!_paused) {
+            listener?.onGnssStatusChanged(count, signal, label)
+        }
+    }
+
+    override fun onProviderStatusChanged(
+        provider: String,
+        enable: Boolean,
+        isLocationEnabled: Boolean
+    ) {
+        listener?.onProviderStatusChanged(provider, enable, isLocationEnabled)
+    }
+
     override fun onLocationChanged(location: Location) {
         notifyLocationChanged(location)
     }
@@ -146,10 +223,12 @@ class LocationClient(private val context: Context) : android.location.LocationLi
             Lifecycle.Event.ON_STOP -> {
                 _paused = true
             }
+
             Lifecycle.Event.ON_DESTROY -> {
-                this.stop()
+                this.destroy()
                 source.lifecycle.removeObserver(this)
             }
+
             else -> return
         }
     }

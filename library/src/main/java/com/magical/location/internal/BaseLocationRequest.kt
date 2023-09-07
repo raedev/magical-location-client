@@ -3,10 +3,10 @@ package com.magical.location.internal
 import android.content.Context
 import android.content.Intent
 import android.location.Location
-import android.location.LocationListener
 import com.magical.location.LocationOptions
 import com.magical.location.MagicalLocationManager
 import com.magical.location.R
+import com.magical.location.client.LocationListener
 import com.magical.location.service.TraceRecorder
 import java.util.*
 
@@ -27,7 +27,7 @@ abstract class BaseLocationRequest(protected val context: Context) {
         get() = MagicalLocationManager.options
 
     /** 注册监听 */
-    private val _listeners: MutableList<LocationListener> = mutableListOf()
+    protected val listeners: MutableList<LocationListener> = mutableListOf()
 
     /** 队列 */
     private val _queue: Queue<Location> = LinkedList()
@@ -36,7 +36,7 @@ abstract class BaseLocationRequest(protected val context: Context) {
      * 注册位置回调
      */
     fun registerListener(listener: LocationListener) {
-        _listeners.add(listener)
+        listeners.add(listener)
         // 立即回调一次
         MagicalLocationManager.location?.let { listener.onLocationChanged(it) }
     }
@@ -44,7 +44,7 @@ abstract class BaseLocationRequest(protected val context: Context) {
     /**
      * 移除位置回调
      */
-    fun removeListener(listener: LocationListener) = _listeners.remove(listener)
+    fun removeListener(listener: LocationListener) = listeners.remove(listener)
 
     /**
      * 开始监听位置
@@ -76,7 +76,12 @@ abstract class BaseLocationRequest(protected val context: Context) {
         }
         // 若当前位置和上一次位置时间间隔小于1秒，并且精度较大则舍弃
         if (lastLocation != null && location.time - lastLocation.time < 1000 && location.accuracy < lastLocation.accuracy) {
-            Log.warn("this location time is less than 1000ms on last location ")
+            Log.warn("this location time is less than 1000ms at last location ")
+            return
+        }
+        // 精度过滤
+        if (options.minAccuracy > 0 && location.accuracy > options.minAccuracy) {
+            Log.warn("this location  ${location.accuracy} accuracy is greater than ${options.minAccuracy}, filter it.")
             return
         }
 
@@ -88,7 +93,7 @@ abstract class BaseLocationRequest(protected val context: Context) {
         intent.putExtra(MagicalLocationManager.EXTRA_LOCATION, location)
         context.sendBroadcast(intent)
         // 回调通知
-        _listeners.forEach { it.onLocationChanged(location) }
+        listeners.forEach { it.onLocationChanged(location) }
         _recorder.onLocationChanged(location)
     }
 
@@ -108,8 +113,22 @@ abstract class BaseLocationRequest(protected val context: Context) {
         Log.error(message)
     }
 
+    protected fun notifyStatusChanged(count: Int, signal: Int, name: String) {
+        listeners.forEach {
+            it.onGnssStatusChanged(count, signal, name)
+        }
+    }
+
+    protected inline fun eachListener(crossinline block: (LocationListener) -> Unit) {
+        listeners.forEach {
+            block(it)
+        }
+    }
+
     internal fun destroy() {
-        _listeners.clear()
+        listeners.clear()
         stop()
     }
+
+
 }

@@ -7,9 +7,9 @@ import android.content.Context
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import android.os.Build
 import android.os.Bundle
 import android.os.Looper
+import androidx.core.location.LocationManagerCompat
 import com.magical.location.LocationPermission
 import com.magical.location.MagicalLocationManager
 import com.magical.location.R
@@ -22,7 +22,7 @@ import com.magical.location.R
  */
 @SuppressLint("MissingPermission")
 class AndroidLocationRequest internal constructor(context: Context) : BaseLocationRequest(context),
-    LocationListener {
+    LocationListener, GnssStatusManager.Listener {
 
     /** 系统定位管理器 */
     private val locationManager: LocationManager =
@@ -31,9 +31,11 @@ class AndroidLocationRequest internal constructor(context: Context) : BaseLocati
     /** 是否已经注册监听 */
     private var isRegister: Boolean = false
 
+    private val gnssStatusManager = GnssStatusManager(context)
+
     override fun start() {
         if (!LocationPermission.isPermissionGranted(context)) return notifyPermissionDenied()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && !locationManager.isLocationEnabled) {
+        if (!LocationManagerCompat.isLocationEnabled(locationManager)) {
             return notifyRequestLocationError(context.getString(R.string.gm_location_disable))
         }
         this.unregister()
@@ -61,6 +63,10 @@ class AndroidLocationRequest internal constructor(context: Context) : BaseLocati
             MagicalLocationManager.location = null
             notifyLocationChanged(it)
         }
+        // 注册GPS信号监听
+        if (options.enableGnss) {
+            gnssStatusManager.register(this)
+        }
     }
 
     override fun stop() = unregister()
@@ -71,11 +77,17 @@ class AndroidLocationRequest internal constructor(context: Context) : BaseLocati
 
     override fun onProviderEnabled(provider: String) {
         Log.info("the $provider provider is enable")
+        eachListener {
+            it.onProviderStatusChanged(provider, enable = true, true)
+        }
         restart()
     }
 
     override fun onProviderDisabled(provider: String) {
         Log.warn("the $provider provider is disable")
+        eachListener {
+            it.onProviderStatusChanged(provider, enable = false, true)
+        }
     }
 
     override fun onLocationChanged(locations: MutableList<Location>) {
@@ -96,6 +108,11 @@ class AndroidLocationRequest internal constructor(context: Context) : BaseLocati
 
     private fun unregister() {
         if (isRegister) locationManager.removeUpdates(this)
+        gnssStatusManager.unregister()
+    }
+
+    override fun onGnssStatusChanged(count: Int, signal: Int, label: String) {
+        notifyStatusChanged(count, signal, label)
     }
 
 }

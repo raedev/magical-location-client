@@ -34,7 +34,7 @@ class LocationDatabaseManager(val context: Context) {
     fun addPoint(trace: LocationTrace, location: Location) {
         val point = LocationPoint(
             traceId = trace.traceId,
-            provider = location.provider,
+            provider = location.provider ?: "unknown",
             longitude = location.longitude,
             latitude = location.latitude,
             altitude = location.latitude,

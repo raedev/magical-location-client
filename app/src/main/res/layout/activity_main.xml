@@ -28,6 +28,15 @@
         android:textSize="18sp" />
 
     <TextView
+        android:id="@+id/tv_gnss"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="信号强度：--"
+        android:textColor="@color/black"
+        android:textSize="18sp" />
+
+    <TextView
         android:id="@+id/tv_location"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -15,15 +15,29 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
     private lateinit var _binding: ActivityMainBinding
 
-    private lateinit var _client: LocationClient
+    private lateinit var client: LocationClient
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(_binding.root)
-        _client = LocationClient(this)
-        _client.listener = object : LocationListener {
+        client = LocationClient(this)
+        client.options.minAccuracy = 10
+        client.listener = object : LocationListener {
+            override fun onGnssStatusChanged(count: Int, signal: Int, label: String) {
+                _binding.tvGnss.text = "信号强度：$label"
+            }
+
+            override fun onProviderStatusChanged(
+                provider: String,
+                enable: Boolean,
+                isLocationEnabled: Boolean
+            ) {
+                super.onProviderStatusChanged(provider, enable, isLocationEnabled)
+                _binding.tvLastLocation.text = "GPS状态：$isLocationEnabled"
+            }
+
             override fun onLocationChanged(location: Location) {
                 val calendar = Calendar.getInstance()
                 val hour = calendar.get(Calendar.HOUR_OF_DAY)
@@ -40,26 +54,33 @@ class MainActivity : AppCompatActivity() {
                         _binding.btnStart.isEnabled = false
                         _binding.btnStop.isEnabled = false
                     }
+
                     LocationServiceState.Connected -> {
                         _binding.btnStart.isEnabled = false
                         _binding.btnStop.isEnabled = true
                     }
+
                     LocationServiceState.Disconnected -> {
                         _binding.btnStart.isEnabled = true
                         _binding.btnStop.isEnabled = false
                     }
                 }
             }
+
+            override fun onLocationError(message: String, throwable: Throwable?) {
+                super.onLocationError(message, throwable)
+                _binding.tvLocation.text = message
+            }
         }
 
         _binding.btnStart.setOnClickListener {
-            if (_client.hasPermission()) return@setOnClickListener _client.start()
+            if (client.hasPermission()) return@setOnClickListener client.start()
             Toast.makeText(it.context, "请求位置权限", Toast.LENGTH_SHORT).show()
-            _client.requestPermission()
+            client.requestPermission()
         }
 
         _binding.btnStop.setOnClickListener {
-            _client.destroy()
+            client.destroy()
         }
 
         val location = MagicalLocationManager.getLastLocation(this)
@@ -69,6 +90,17 @@ class MainActivity : AppCompatActivity() {
     private fun Location?.format(): String {
         this ?: return "无位置信息"
         val timeText = SimpleDateFormat.getTimeInstance().format(Date(time))
-        return "$timeText，来自${provider.uppercase()}，经纬度($longitude,$latitude)"
+        return "$timeText，来自${provider?.uppercase()}，经纬度($longitude,$latitude)，海拔（${this.altitude}） 精度（${this.accuracy}）"
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (!client.hasPermission()) {
+            LocationPermission.requestBackgroundPermission(this)
+        }
     }
 }

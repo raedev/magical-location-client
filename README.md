@@ -7,6 +7,8 @@ Android 定位库，提供实时位置信息、轨迹记录功能，定位以后
 
 默认实现为Android系统定位，若需要百度或者高德地图实现可以自行实现`BaseLocationRequest`。
 
+![arch](architecture.drawio.png)
+
 ## 集成
 
 ```groovy

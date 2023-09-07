@@ -28,6 +28,14 @@ object LocationPermission {
         ActivityCompat.requestPermissions(context, groups.toTypedArray(), 0x3721)
     }
 
+    fun requestBackgroundPermission(context: Activity) {
+        if (isPermissionGranted(context) || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        val groups = mutableListOf<String?>(
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+        )
+        ActivityCompat.requestPermissions(context, groups.toTypedArray(), 0x3721)
+    }
+
     /**
      * 是否有权限访问定位 (完全访问位置权限）
      */
