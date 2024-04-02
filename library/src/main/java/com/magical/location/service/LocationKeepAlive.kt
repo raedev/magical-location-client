@@ -91,11 +91,19 @@ internal class LocationKeepAlive(private val service: LocationService) :
         if (_receiver.isRegister) return
         Log.debug("注册位置保活服务")
         // 注册锁屏
-        service.registerReceiver(_receiver, IntentFilter().apply {
-            addAction(LocationServiceCompat.ACTION_LOCATION_ALARM)
-            addAction(Intent.ACTION_SCREEN_OFF)
-            addAction(Intent.ACTION_USER_PRESENT)
-        })
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            service.registerReceiver(_receiver, IntentFilter().apply {
+                addAction(LocationServiceCompat.ACTION_LOCATION_ALARM)
+                addAction(Intent.ACTION_SCREEN_OFF)
+                addAction(Intent.ACTION_USER_PRESENT)
+            }, Context.RECEIVER_EXPORTED)
+        } else {
+            service.registerReceiver(_receiver, IntentFilter().apply {
+                addAction(LocationServiceCompat.ACTION_LOCATION_ALARM)
+                addAction(Intent.ACTION_SCREEN_OFF)
+                addAction(Intent.ACTION_USER_PRESENT)
+            })
+        }
         // 注册定时闹钟
         val am = service.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         // 定时1分钟检查

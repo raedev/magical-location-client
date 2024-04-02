@@ -40,7 +40,7 @@ dependencies {
 
 // Maven上传配置
 mavenPublishing {
-    name = "com.github.raedev:location:1.0.1"
+    name = "com.github.raedev:location:1.0.2"
     pomUrl = "https://github.com/raedev/magical-location-client"
     pomName = "rae"
     pomEmail = "raedev@qq.com"

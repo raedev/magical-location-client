@@ -26,7 +26,7 @@ class LocationService : Service() {
     override fun onCreate() {
         super.onCreate()
         LocationServiceCompat.compatService(this)
-        _binder.request = AndroidLocationRequest(this)
+        _binder.request = AndroidLocationRequest(applicationContext)
         _binder.request.start()
         Log.debug("位置服务已启动")
     }
