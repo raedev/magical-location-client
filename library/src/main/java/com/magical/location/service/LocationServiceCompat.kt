@@ -1,6 +1,11 @@
 package com.magical.location.service
 
-import android.app.*
+import android.app.ActivityManager
+import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
@@ -26,11 +31,14 @@ object LocationServiceCompat {
     private const val CHANNEL: String = "LocationServiceChannel"
     internal const val ACTION_LOCATION_ALARM = "com.magical.location.action.ALARM"
 
+    internal var application: Application? = null
+
     /**
      * 启动位置服务
      */
     fun startService(context: Context, options: LocationOptions? = null) {
         if (!LocationPermission.isPermissionGranted(context)) return Log.error("无位置权限无法启动服务")
+        application = context.applicationContext as Application
         val intent = Intent(context, LocationService::class.java)
         options?.let { intent.putExtra("options", it) }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

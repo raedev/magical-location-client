@@ -60,7 +60,7 @@ class AndroidLocationRequest internal constructor(context: Context) : BaseLocati
         }
         // 回调位置信息
         MagicalLocationManager.getLastLocation(context)?.let {
-            MagicalLocationManager.location = null
+            MagicalLocationManager.location = it
             notifyLocationChanged(it)
         }
         // 注册GPS信号监听
