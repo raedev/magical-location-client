@@ -6,7 +6,6 @@ import android.location.Location
 import android.location.LocationManager
 import com.magical.location.LocationPermission.isPermissionGranted
 import com.magical.location.internal.Log
-import com.magical.location.service.LocationServiceCompat
 
 /**
  * 位置信息上下文
@@ -34,13 +33,6 @@ object MagicalLocationManager {
     /** 当前应用程序最后一次的位置信息 */
     var location: Location? = null
         internal set
-        get() {
-            if (field == null && LocationServiceCompat.application != null) {
-                // 当字段为空时，获取最后一次位置
-                field = getLastLocation(LocationServiceCompat.application!!)
-            }
-            return field
-        }
 
     /** 当前位置配置项 */
     val options: LocationOptions = LocationOptions()
