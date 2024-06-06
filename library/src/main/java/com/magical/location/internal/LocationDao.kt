@@ -1,6 +1,10 @@
 package com.magical.location.internal
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
 import com.magical.location.model.LocationPoint
 import com.magical.location.model.LocationTrace
 
@@ -16,25 +20,25 @@ interface LocationDao {
      * 插入轨迹点
      */
     @Insert
-    fun insert(location: LocationPoint)
+    fun insert(location: LocationPoint): Long
 
     /**
      * 新增轨迹
      */
     @Insert
-    fun insert(trace: LocationTrace)
+    fun insert(trace: LocationTrace): Long
 
     /**
      * 更新轨迹信息
      */
     @Update
-    fun update(trace: LocationTrace)
+    fun update(trace: LocationTrace): Int
 
     /**
      * 删除轨迹信息
      */
     @Delete
-    fun delete(trace: LocationTrace)
+    fun delete(trace: LocationTrace): Int
 
     /**
      * 查询轨迹点
@@ -47,6 +51,12 @@ interface LocationDao {
      */
     @Query("SELECT * FROM TRACES WHERE trace_name LIKE :name")
     fun findTrace(name: String): LocationTrace?
+
+    /**
+     * 查询轨迹
+     */
+    @Query("SELECT * FROM TRACES WHERE trace_id=:id")
+    fun findTrace(id: Long): LocationTrace?
 
     /**
      * 查询轨迹

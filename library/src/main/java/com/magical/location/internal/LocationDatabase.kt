@@ -20,7 +20,7 @@ import java.io.File
     version = 1,
     exportSchema = false
 )
-internal abstract class LocationDatabase : RoomDatabase() {
+abstract class LocationDatabase : RoomDatabase() {
 
     companion object {
         fun create(context: Context, options: LocationOptions): LocationDatabase {
@@ -28,6 +28,7 @@ internal abstract class LocationDatabase : RoomDatabase() {
             options.databasePath?.let {
                 name = File(it, name).path
             }
+            Log.debug("位置数据库路径：${name}")
             return Room.databaseBuilder(context, LocationDatabase::class.java, name).build()
         }
     }

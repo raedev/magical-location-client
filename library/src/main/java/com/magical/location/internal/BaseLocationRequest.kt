@@ -8,7 +8,6 @@ import com.magical.location.MagicalLocationManager
 import com.magical.location.R
 import com.magical.location.client.LocationListener
 import com.magical.location.service.TraceRecorder
-import java.util.*
 
 /**
  * 位置请求
@@ -28,9 +27,6 @@ abstract class BaseLocationRequest(protected val context: Context) {
 
     /** 注册监听 */
     protected val listeners: MutableList<LocationListener> = mutableListOf()
-
-    /** 队列 */
-    private val _queue: Queue<Location> = LinkedList()
 
     /**
      * 注册位置回调

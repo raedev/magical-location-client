@@ -31,7 +31,11 @@ data class LocationOptions(
     /** 位置坐标类型，默认为WGS84坐标 */
     var coordinateType: CoordinateType = CoordinateType.WGS84,
     /** 位置数据库保存路径 */
-    var databasePath: String? = null
+    var databasePath: String? = null,
+    /** 关联的轨迹ID */
+    var traceId: Long? = null,
+    /** 是否允许记录模拟位置，默认是允许的。 */
+    var enableMockLocation: Boolean = true
 ) : Parcelable {
 
     /**

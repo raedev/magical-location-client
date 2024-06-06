@@ -8,11 +8,11 @@ plugins {
 
 android {
     namespace 'com.magical.location'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         minSdk 21
-        targetSdk 33
+        targetSdk 34
     }
 
     buildTypes {
@@ -33,17 +33,17 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.10.1'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
     // Room数据库
-    def room = '2.4.3'
+    def room = '2.6.1'
     implementation("androidx.room:room-runtime:$room")
     kapt("androidx.room:room-compiler:$room")
 }
 
 // Maven上传配置
 mavenPublishing {
-    name = "com.github.raedev:location:1.0.2"
+    name = "com.github.raedev:location:1.0.3"
     pomUrl = "https://github.com/raedev/magical-location-client"
     pomName = "rae"
     pomEmail = "raedev@qq.com"

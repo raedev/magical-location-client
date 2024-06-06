@@ -5,28 +5,35 @@ import android.location.Location
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.magical.location.client.LocationClient
 import com.magical.location.client.LocationListener
+import com.magical.location.client.TrackClient
 import com.magical.location.demo.databinding.ActivityMainBinding
 import com.magical.location.model.LocationServiceState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var _binding: ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
 
     private lateinit var client: LocationClient
+    private lateinit var trackClient: TrackClient
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        _binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(_binding.root)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         client = LocationClient(this)
         client.options.minAccuracy = 10
         client.listener = object : LocationListener {
             override fun onGnssStatusChanged(count: Int, signal: Int, label: String) {
-                _binding.tvGnss.text = "信号强度：$label"
+                binding.tvGnss.text = "信号强度：$label"
             }
 
             override fun onProviderStatusChanged(
@@ -35,7 +42,7 @@ class MainActivity : AppCompatActivity() {
                 isLocationEnabled: Boolean
             ) {
                 super.onProviderStatusChanged(provider, enable, isLocationEnabled)
-                _binding.tvLastLocation.text = "GPS状态：$isLocationEnabled"
+                binding.tvLastLocation.text = "GPS状态：$isLocationEnabled"
             }
 
             override fun onLocationChanged(location: Location) {
@@ -43,48 +50,82 @@ class MainActivity : AppCompatActivity() {
                 val hour = calendar.get(Calendar.HOUR_OF_DAY)
                 val minute = calendar.get(Calendar.MINUTE)
                 val second = calendar.get(Calendar.SECOND)
-                _binding.tvLocation.text =
+                binding.tvLocation.text =
                     String.format("[%02d:%02d:%02d]: %s", hour, minute, second, location.format())
             }
 
             override fun onLocationServiceStateChanged(state: LocationServiceState) {
-                _binding.tvLocation.text = "当前服务状态：$state"
+                binding.tvLocation.text = "当前服务状态：$state"
                 when (state) {
                     LocationServiceState.Connecting -> {
-                        _binding.btnStart.isEnabled = false
-                        _binding.btnStop.isEnabled = false
+                        binding.btnStart.isEnabled = false
+                        binding.btnStop.isEnabled = false
                     }
 
                     LocationServiceState.Connected -> {
-                        _binding.btnStart.isEnabled = false
-                        _binding.btnStop.isEnabled = true
+                        binding.btnStart.isEnabled = false
+                        binding.btnStop.isEnabled = true
                     }
 
                     LocationServiceState.Disconnected -> {
-                        _binding.btnStart.isEnabled = true
-                        _binding.btnStop.isEnabled = false
+                        binding.btnStart.isEnabled = true
+                        binding.btnStop.isEnabled = false
                     }
                 }
             }
 
             override fun onLocationError(message: String, throwable: Throwable?) {
                 super.onLocationError(message, throwable)
-                _binding.tvLocation.text = message
+                binding.tvLocation.text = message
             }
         }
 
-        _binding.btnStart.setOnClickListener {
+        binding.btnStart.setOnClickListener {
             if (client.hasPermission()) return@setOnClickListener client.start()
             Toast.makeText(it.context, "请求位置权限", Toast.LENGTH_SHORT).show()
             client.requestPermission()
         }
 
-        _binding.btnStop.setOnClickListener {
+        binding.btnStop.setOnClickListener {
             client.destroy()
         }
 
         val location = MagicalLocationManager.getLastLocation(this)
-        _binding.tvLastLocation.text = "最后一次位置：${location.format()}"
+        binding.tvLastLocation.text = "最后一次位置：${location.format()}"
+
+        trackClient = TrackClient(client)
+        binding.btnTrack.setOnClickListener {
+            // 是否允许记录模拟位置，默认true
+            trackClient.options.enableMockLocation = true
+            if (trackClient.isTrackRunning) {
+                // 停止记录
+                trackClient.stop()
+                binding.btnTrack.text = "开始记录轨迹"
+            } else {
+                trackClient.start("张三1024年10月24日的轨迹记录")
+                binding.btnTrack.text = "停止记录"
+            }
+        }
+
+        binding.btnTrackInfo.setOnClickListener {
+            if (!trackClient.isTrackRunning) {
+                Toast.makeText(this, "轨迹未开始记录", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            lifecycleScope.launch {
+                val track = withContext(Dispatchers.IO) { trackClient.currentTrace() }
+                if (track == null) {
+                    Toast.makeText(it.context, "查询不到当前轨迹信息", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(
+                        it.context,
+                        "当前记录的轨迹为：${track.traceName}，轨迹点${track.points?.size}个",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+        }
     }
 
     private fun Location?.format(): String {

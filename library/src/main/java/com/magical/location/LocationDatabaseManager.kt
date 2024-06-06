@@ -5,7 +5,6 @@ import android.location.Location
 import com.magical.location.internal.LocationDao
 import com.magical.location.internal.LocationDatabase
 import com.magical.location.model.LocationPoint
-import com.magical.location.model.LocationTrace
 
 /**
  * 数据库管理器
@@ -14,33 +13,27 @@ import com.magical.location.model.LocationTrace
  * @copyright Copyright (c) https://github.com/raedev All rights reserved.
  */
 class LocationDatabaseManager(val context: Context) {
-    private var _dao: LocationDao? = null
-    private val dao: LocationDao
-        get() = _dao!!
 
-    init {
-        reopen()
-    }
+    val database: LocationDatabase =
+        LocationDatabase.create(context, MagicalLocationManager.options)
 
-    fun reopen() {
-        _dao = LocationDatabase.create(context, MagicalLocationManager.options).locationDao()
-    }
+    val locationDao: LocationDao = database.locationDao()
 
     /**
      * 插入轨迹点
-     * @param trace 轨迹
+     * @param traceId 轨迹Id
      * @param location 位置信息
      */
-    fun addPoint(trace: LocationTrace, location: Location) {
+    fun insertTrackPoint(traceId: Long, location: Location): Long {
         val point = LocationPoint(
-            traceId = trace.traceId,
+            traceId = traceId,
             provider = location.provider ?: "unknown",
             longitude = location.longitude,
             latitude = location.latitude,
             altitude = location.latitude,
             accuracy = location.accuracy,
-            speed = location.speed
+            speed = location.speed,
         )
-        dao.insert(point)
+        return locationDao.insert(point)
     }
 }

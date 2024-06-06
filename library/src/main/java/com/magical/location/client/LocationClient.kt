@@ -31,7 +31,7 @@ import com.magical.location.service.LocationServiceCompat
  * @date 2022/10/28
  * @copyright Copyright (c) https://github.com/raedev All rights reserved.
  */
-class LocationClient(private val context: Context) : LocationListener,
+class LocationClient(internal val context: Context) : LocationListener,
     LifecycleEventObserver {
 
     /** 配置项 */

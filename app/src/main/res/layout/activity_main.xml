@@ -18,6 +18,19 @@
         android:layout_height="wrap_content"
         android:text="停止服务" />
 
+
+    <Button
+        android:id="@+id/btn_track"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="记录轨迹" />
+
+    <Button
+        android:id="@+id/btn_track_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="当前轨迹信息" />
+
     <TextView
         android:id="@+id/tv_last_location"
         android:layout_width="match_parent"

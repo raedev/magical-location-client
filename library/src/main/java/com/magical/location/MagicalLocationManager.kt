@@ -35,7 +35,9 @@ object MagicalLocationManager {
         internal set
 
     /** 当前位置配置项 */
-    val options: LocationOptions = LocationOptions()
+    var options: LocationOptions = LocationOptions()
+        internal set
+
 
     /**
      * 获取最后一次位置信息
