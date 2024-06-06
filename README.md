@@ -1,5 +1,7 @@
 # MagicalLocation
 
+[![](https://jitpack.io/v/raedev/magical-location-client.svg)](https://jitpack.io/#raedev/magical-location-client)
+
 Android 定位库，提供实时位置信息、轨迹记录功能，定位以后台服务方式进行持续定位并带后台保活方案。应用场景：
 
 - 地图类APP，需要在任何代码位置中获取GPS位置信息，或者GPS定位图层。
@@ -12,7 +14,6 @@ Android 定位库，提供实时位置信息、轨迹记录功能，定位以后
 ## 集成
 
 ```groovy
-
 repositories {
     // 仓库地址
     maven { url 'https://maven.raeblog.com/repository/public/' }
@@ -20,7 +21,7 @@ repositories {
 
 dependencies {
     // 引用库
-    implementation 'com.github.raedev:location:1.0.0'
+    implementation 'com.github.raedev:location:1.0.3'
 }
 ```
 
@@ -29,7 +30,6 @@ dependencies {
 更多调用方式请查看`MainActivity.kt`示例。
 
 ```kotlin
-
 // TODO：请自行先获取定位权限后再调用LocationClient，否则后面的服务都不可用。
 val context: Activity = this
 LocationPermission.requestPermission(context)
@@ -53,5 +53,4 @@ client.stop()
 
 // 释放后台服务
 client.destroy()
-
 ```
